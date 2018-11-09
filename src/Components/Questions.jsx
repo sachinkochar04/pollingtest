@@ -1,15 +1,14 @@
 import React ,{ Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { connect } from 'react-redux';
-import PenIcon from 'mdi-react/PenIcon';
+import { PenIcon, DeleteIcon } from 'mdi-react';
 import { 
+    Alert,
     Container,
     Row,
     Col,
     Card,
     CardBody,
     CardTitle,
-    CardText,
     Button,
     CardHeader,
     Form,
@@ -18,20 +17,19 @@ import {
     Input,
 } from 'reactstrap';
 import TopBar from './Common/TopBar.jsx';
-import { auth, database } from '../Inc/firebase.js'
+import { database } from '../Inc/firebase.js'
 class Questions extends Component {
     constructor(props){
         super(props);
         this.state = {
             loading:false,
             title:'',
-            active:false,
             add:false,
             stepCount : 0,
             options:[],
             allOptions:[],
             message:'',
-            question: new Object
+            question: {}
         }
     }
 
@@ -40,33 +38,34 @@ class Questions extends Component {
     }
 
     onOptionsChangeHandler =(i,name, value)=>{
-        console.log('name','value',name,value);
         let { options } = this.state;
         options[i-1].title = value 
         this.setState({ options })
     }
     onSaveHandler = () =>{
         let { title, options } = this.state
-        let { allStates } = this.props
+        options.map((data)=>{
+            return data.poll = 0 
+        })
         let data = {
                 title,
                 allOptions:options,
-                isActive : true,
 
         }
-        this.setState({ add:false })
-        database.ref(`/questions`).set(data);
+        database.ref(`/questions`).set(data).then(()=>{
+            this.setState({ 
+                add:false,
+                message:'Success',            
+            })
+
+        }).catch((err)=>{
+            this.setState({ 
+                message:'Error saving question, please try again',            
+            })
+        })
 
     }
 
-    onActiveHandler = () => {
-        let { question } = this.state; 
-        let data = {
-            isActive :!question.isActive
-        }
-        let uid = auth.currentUser.uid;
-        database.ref(`questions/`).update(data)
-    }
 
     addStepCount = () => {
         let { options, stepCount } = this.state;
@@ -94,21 +93,15 @@ class Questions extends Component {
                 if(snapshot.val()){
                     question.title = snapshot.val().title 
                     question.allOptions = snapshot.val().allOptions 
-                    question.isActive = snapshot.val().isActive;
                     self.setState({ question, loading:false })
+                }else{
+                    self.setState({ loading:false })
                 }
                 
             });
     }
 
     onEditHandler= () =>{
-        let { question } = this.state; 
-        question.isActive = false;
-        let data = {
-            question
-        }
-        let uid = auth.currentUser.uid;
-        database.ref(`questions/`).update(data)
         this.setState({
             title : this.state.question.title,
             options : this.state.question.allOptions,
@@ -116,11 +109,23 @@ class Questions extends Component {
             add: true
         })
     }
-    
+
+    onDeleteHandler= () =>{
+        this.setState({ loading : true })
+        database.ref(`questions/`).remove();
+        this.setState({
+            message : 'Question deleted',
+            question:'',
+            loading:false
+        })
+    }
+
+    componentWillUnmount(){
+        database.ref('/questions/').off();
+    }    
 
     render() {
-        let { loading, active, add, stepCount, options, question } = this.state
-        console.log('options', question)
+        let { loading, message, add, stepCount, options, question } = this.state
         let optionsArray = [];
         for(let i = 0 ; i< stepCount; i++ ){
             optionsArray[i] =(
@@ -138,9 +143,14 @@ class Questions extends Component {
             <div>
                 <TopBar />
                 <Container>
+                { message && (
+                    <Alert className="alert-abs" color="success">
+                        {message}
+                    </Alert>
+                )}
                 {loading ? (
                     <div className="text-center m-auto">
-                        <img src={require('../assets/images/spinner.gif')} />
+                        <img src={require('../assets/images/spinner.gif')} alt="loading..." />
                     </div>
                 ) : (
 
@@ -150,8 +160,8 @@ class Questions extends Component {
                             <CardHeader>Question:
                                     {question.title && (
                                         <>
-                                            <span className="text-center ml-2 text-muted">  {question.isActive ? 'Active' : 'InActive'} </span>
                                             <PenIcon onClick={ ()=>{ this.onEditHandler() } } className="abs-right" /> 
+                                            <DeleteIcon onClick={ ()=>{ this.onDeleteHandler() } } className="abs-right-del" /> 
                                         </>
                                     )}
                                 </CardHeader>
@@ -167,12 +177,6 @@ class Questions extends Component {
                                                     )
                                                 })}
                                             </ul>
-                                            {/* <Button color="primary" className="mr-1">Save</Button>  */}
-                                            { question.isActive ? (
-                                                    <Button color="danger" onClick={()=>{ this.onActiveHandler()}}>inActive</Button>
-                                                ) : (
-                                                    <Button color="success" onClick={()=>{ this.onActiveHandler()}}>Active</Button>
-                                                ) }
                                        </CardBody>
                                     ) : (
                                         <div>
@@ -223,22 +227,4 @@ class Questions extends Component {
 }
 
 
-const mapStateToProps = (state) => {
-    const allStates = state;
-    console.log("State", allStates);
-    return { allStates };
-  }
-
-// const mapDispatchToProps = (dispatch, props) => {
-//     return {
-//       _login: (data) => {
-//         dispatch(loginAction(data));
-//       },
-//       checkLogin : () => {
-//           dispatch(checkLoginAction())
-//       }
-//     }
-// }
-
-
-export default  withRouter(connect(mapStateToProps)(Questions));
+export default  withRouter(Questions);

@@ -1,6 +1,6 @@
 import React ,{ Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { Container, Row, Col, Card, CardBody, CardTitle, CardDeck, CardText, Button, CardHeader  } from 'reactstrap';
+import { Container, Row, Col, Card, CardBody, CardTitle, CardDeck, CardText  } from 'reactstrap';
 import TopBar from './Common/TopBar.jsx'
 import { auth, database } from '../Inc/firebase.js';
 
@@ -18,11 +18,20 @@ class Stats extends Component {
         var self= this;
         database.ref('/questions/').on('value', function(snapshot) {
         let uid = auth.currentUser.uid
-        let question = new Object;
-        question = snapshot.val();
-        console.log('snapshot.val(): ',snapshot.val())
-        self.setState({ question,rawData:snapshot.val(), uid, loading:false });
+        if(snapshot.val()){
+
+            let question = {};
+            question = snapshot.val();
+            self.setState({ question,rawData:snapshot.val(), uid, loading:false });
+        }else{
+            self.setState({  uid, loading:false });
+        }
+
         });
+    }
+
+    componentWillUnmount(){
+        database.ref('/questions/').off();
     }
 
     render() {
@@ -33,7 +42,7 @@ class Stats extends Component {
                 <Container>
                     {loading ? (
                         <div className="text-center m-auto">
-                            <img src={require('../assets/images/spinner.gif')} />
+                            <img src={require('../assets/images/spinner.gif')} alt="loading..."/>
                         </div>
                     ) : (
                         <Row className="mt-2">
@@ -41,24 +50,35 @@ class Stats extends Component {
                                 <h1>Stats</h1>
                                 <hr></hr>
                             </Col>
-                            <Col md={12} sm={12}>
-                                <h3>Question:- <span class="text-muted">{ question && question.title }</span></h3>
-                            </Col>
-                            <CardDeck>
+                            {
+                                question.title ? (
+                                    <>
+                                        <Col md={12} sm={12}>
+                                            <h3>Question:- <span className="text-muted">{ question && question.title }</span></h3>
+                                        </Col>
+                                        <CardDeck>
 
-                                {question.allOptions && question.allOptions.map((option,i)=>{
-                                    return(
-                                                <Card  width="100%">
-                                                    <CardBody>
-                                                        <CardTitle>Option:-{ option.title }</CardTitle>
-                                                        <CardText>Polls:- { option.poll }</CardText>
-                                                    </CardBody>
-                                                </Card>
-                                    )
-                                }) 
+                                            {question.allOptions && question.allOptions.map((option,i)=>{
+                                                return(
+                                                            <Card  width="100%" key={i}>
+                                                                <CardBody>
+                                                                    <CardTitle>Option:-{ option.title }</CardTitle>
+                                                                    <CardText>Polls:- { option.poll }</CardText>
+                                                                </CardBody>
+                                                            </Card>
+                                                )
+                                            }) 
 
-                                }
-                            </CardDeck>
+                                            }
+                                        </CardDeck>
+                                    </>
+                                ):(
+                                    <Col md={12} sm={12}>
+                                        <h3><span className="text-muted">No question created yet!</span></h3>
+                                    </Col>
+
+                                )
+                            }
                         </Row>
                     )}
                 </Container>

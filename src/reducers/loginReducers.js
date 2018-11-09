@@ -1,12 +1,9 @@
-// import { LOGIN, ERROR, FORGETPASSWORD } from '../actions/login_action';
-
 const initialState = {
     isLoggedIn: false,
     user:'',
     data:''
   };
   
-  // receiving response sent by action according to type of action
   export default function loginReducers(state = initialState, action) {
       console.log(action,'action')
     switch (action.type) {
@@ -29,13 +26,6 @@ const initialState = {
         return { isLoggedIn: false };
         break;
 
-      case 'SIGNUPSUCCESS':
-        return { 
-          signUp: action.payload,
-          isLoggedIn : true,
-          user:action.payload.user
-         };
-        break;
       default:
         return state;
     }

@@ -33,15 +33,15 @@ class Routes extends Component {
             <>
             {loading ? (
                 <div className="text-center m-auto">
-                    <img src={require('../assets/images/spinner.gif')} />
+                    <img src={require('../assets/images/spinner.gif')} alt="loading..." />
                 </div>
             ) : (
 
                 <BrowserRouter>
                     <Switch>
                         <Route exact path="/" component ={Questions} />
-                        <Route exact path="/poll" component ={Poll} />
-                        <Route exact path="/stats" component ={Stats} />
+                        <Route path="/poll" component ={Poll} />
+                        <Route path="/stats" component ={Stats} />
                     </Switch>
                 </BrowserRouter>
             )}

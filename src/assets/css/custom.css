@@ -28,3 +28,7 @@ m-0{
 .background-disabled{
     background-color: #ddd;
 }
+.abs-right-del{
+    position: absolute;
+    right: 30px;
+}
