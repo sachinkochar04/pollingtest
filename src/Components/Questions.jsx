@@ -39,30 +39,36 @@ class Questions extends Component {
 
     onOptionsChangeHandler =(i,name, value)=>{
         let { options } = this.state;
+        console.log(options)
         options[i-1].title = value 
         this.setState({ options })
     }
     onSaveHandler = () =>{
         let { title, options } = this.state
-        options.map((data)=>{
-            return data.poll = 0 
-        })
-        let data = {
-                title,
-                allOptions:options,
+        if(title === ''){
+            this.setState({ message:'Please Enter Title' });
+        }else{
 
+            options.map((data)=>{
+                return data.poll = 0 
+            })
+            let data = {
+                    title,
+                    allOptions:options,
+    
+            }
+            database.ref(`/questions`).set(data).then(()=>{
+                this.setState({ 
+                    add:false,
+                    message:'Success',            
+                })
+    
+            }).catch((err)=>{
+                this.setState({ 
+                    message:'Error saving question, please try again',            
+                })
+            })
         }
-        database.ref(`/questions`).set(data).then(()=>{
-            this.setState({ 
-                add:false,
-                message:'Success',            
-            })
-
-        }).catch((err)=>{
-            this.setState({ 
-                message:'Error saving question, please try again',            
-            })
-        })
 
     }
 
