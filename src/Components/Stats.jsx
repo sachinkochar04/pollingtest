@@ -1,6 +1,6 @@
 import React ,{ Component } from 'react';
 import { withRouter } from 'react-router-dom';
-import { Container, Row, Col, Card, CardBody, CardTitle, CardDeck, CardText  } from 'reactstrap';
+import { Container, Row, Col, Card, CardBody, CardTitle, CardDeck, CardText, Progress  } from 'reactstrap';
 import TopBar from './Common/TopBar.jsx'
 import { auth, database } from '../Inc/firebase.js';
 
@@ -36,6 +36,12 @@ class Stats extends Component {
 
     render() {
         let { loading, question } = this.state;
+        let reduced;
+        if(question.title){
+            reduced = question.allOptions.reduce((currentValue,array)=>{
+                return currentValue+array.poll
+            },0)
+        }
         return(
             <div>
                 <TopBar />
@@ -53,19 +59,23 @@ class Stats extends Component {
                             {
                                 question.title ? (
                                     <>
-                                        <Col md={12} sm={12}>
+                                        <Col md={12} sm={12} className="mb-20">
                                             <h3>Question:- <span className="text-muted">{ question && question.title }</span></h3>
                                         </Col>
                                         <CardDeck>
 
                                             {question.allOptions && question.allOptions.map((option,i)=>{
+                                                let pollPercentage = option.poll === 0 ? 0 : (option.poll/reduced*100).toFixed(2)
                                                 return(
+                                                    <Col md={4} sm={4} className="mb-20" key={i}>
                                                             <Card  width="100%" key={i}>
                                                                 <CardBody>
                                                                     <CardTitle>Option:-{ option.title }</CardTitle>
-                                                                    <CardText>Polls:- { option.poll }</CardText>
+                                                                    <CardText>Polls:- { pollPercentage + '%' }</CardText>
+                                                                    <Progress value={ pollPercentage } />
                                                                 </CardBody>
                                                             </Card>
+                                                    </Col>
                                                 )
                                             }) 
 
